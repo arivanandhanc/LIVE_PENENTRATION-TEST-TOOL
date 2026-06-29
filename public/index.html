@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PenTestTool — Security Scanner</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">⛨</span>
+    <div>
+      <div class="title">PenTestTool</div>
+      <div class="tagline">Active web-application security scanner</div>
+    </div>
+  </div>
+  <a class="ghost" href="https://pentest.arivanandhan.in" target="_blank" rel="noopener">pentest.arivanandhan.in</a>
+</header>
+
+<main class="layout">
+  <!-- ============ Configuration panel ============ -->
+  <section class="panel" id="config">
+    <h2>New Assessment</h2>
+
+    <label class="field">
+      <span>Target URL or hostname</span>
+      <input id="target" type="text" placeholder="https://example.com" autocomplete="off">
+    </label>
+
+    <div class="field">
+      <span>Scan profile</span>
+      <div id="profiles" class="profiles"><div class="muted">Loading profiles…</div></div>
+    </div>
+
+    <details class="field">
+      <summary>Advanced — individual modules</summary>
+      <div id="modules" class="modules"><div class="muted">Loading modules…</div></div>
+      <small class="muted">Leave untouched to use the profile above. Checking modules here overrides the profile selection.</small>
+    </details>
+
+    <details class="field deps">
+      <summary>Authenticated scan (optional) — test behind login</summary>
+      <small class="muted">Provide a session so the crawler and active tests reach authenticated pages. Use any combination.</small>
+      <input id="authCookies" type="text" placeholder="Cookie: session=abc123; csrf=…">
+      <input id="authBearer" type="text" placeholder="Bearer token (without the word 'Bearer')">
+      <textarea id="authHeaders" placeholder="Extra headers, one per line:&#10;X-API-Key: 123&#10;X-Tenant: acme"></textarea>
+    </details>
+
+    <details class="field deps">
+      <summary>Dependency audit (optional) — paste package.json / lockfile</summary>
+      <textarea id="packageJson" placeholder='{ "dependencies": { "lodash": "4.17.20" } }'></textarea>
+      <small class="muted">Enables the OSV dependency audit. Paste a <code>package.json</code> above (and a <code>package-lock.json</code> below) to check for known-vulnerable packages.</small>
+      <textarea id="packageLock" placeholder="package-lock.json (optional)"></textarea>
+    </details>
+
+    <label class="consent">
+      <input id="consent" type="checkbox">
+      <span>I confirm I <b>own</b> the target above or have <b>explicit written authorization</b> to perform security testing against it. I understand unauthorized scanning may be illegal.</span>
+    </label>
+
+    <button id="start" class="primary" disabled>Start Scan</button>
+    <div id="formError" class="error" hidden></div>
+  </section>
+
+  <!-- ============ Results panel ============ -->
+  <section class="panel results" id="results" hidden>
+    <div class="results-head">
+      <div class="rh-left">
+        <h2 id="resultTitle">Scan</h2>
+        <span id="riskBadge" class="riskBadge" hidden></span>
+      </div>
+      <div class="actions">
+        <button id="downloadPdf" class="primary small" disabled>Download PDF</button>
+        <button id="viewReport" class="secondary" disabled>View Report</button>
+        <button id="exportJson" class="secondary" disabled>JSON</button>
+      </div>
+    </div>
+
+    <div class="progress">
+      <div class="progress-bar"><i id="bar"></i></div>
+      <div id="phase" class="phase muted">Initializing…</div>
+    </div>
+
+    <div class="scorecards" id="scorecards"></div>
+
+    <div id="recon" class="recon" hidden></div>
+
+    <div class="split">
+      <div class="findings-col">
+        <h3>Findings <span id="findCount" class="count">0</span></h3>
+        <div id="findings" class="findings"></div>
+      </div>
+      <div class="log-col">
+        <h3>Activity Log</h3>
+        <div id="log" class="log"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot muted">
+  PenTestTool · authorised testing only · findings reflect target state at scan time.
+</footer>
+
+<script src="/app.js"></script>
+</body>
+</html>

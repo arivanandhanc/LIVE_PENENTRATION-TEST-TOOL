@@ -1,0 +1,26 @@
+{
+  "name": "pentesttool",
+  "version": "1.0.0",
+  "description": "Active web-application penetration-testing scanner with crawler, active injection testing (XSS/SQLi/SSRF/CMDi/SSTI/LFI), authenticated scanning, and professional PDF reporting. Hosted at pentest.arivanandhan.in.",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "pentest",
+    "security",
+    "scanner",
+    "vulnerability",
+    "report"
+  ],
+  "author": "Arivanandhan",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
