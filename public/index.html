@@ -3,106 +3,123 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PenTestTool — Security Scanner</title>
-<link rel="stylesheet" href="/styles.css">
+<title>Arivanandhan SecTools — Active Web Penetration Testing</title>
+<meta name="description" content="A professional, crawler-driven web-application penetration-testing suite: active testing for XSS, SQLi, SSRF, command injection, and more, with authenticated scanning and PDF reporting.">
+<link rel="stylesheet" href="/site.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">
-    <span class="logo">⛨</span>
-    <div>
-      <div class="title">PenTestTool</div>
-      <div class="tagline">Active web-application security scanner</div>
+<div id="site-nav"></div>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <div class="container center">
+    <span class="eyebrow">sectools.arivanandhan.in</span>
+    <h1>Find the vulnerabilities before attackers do.</h1>
+    <p class="lead">An active web-application penetration-testing suite that crawls your app,
+    actively verifies real exploits, and produces a professional, board-ready report —
+    in minutes, from your browser.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="/scan">Launch a Scan →</a>
+      <a class="btn btn-ghost" href="/docs">Read the Docs</a>
+    </div>
+    <div class="hero-badges">
+      <span>✓ 25 scan modules</span>
+      <span>✓ Authenticated scanning</span>
+      <span>✓ OWASP Top 10 mapped</span>
+      <span>✓ One-click PDF report</span>
+    </div>
+    <div class="stats">
+      <div class="s"><b>25</b><span>Security modules</span></div>
+      <div class="s"><b>3</b><span>Scan profiles</span></div>
+      <div class="s"><b>10/10</b><span>OWASP categories</span></div>
+      <div class="s"><b>0</b><span>Install steps</span></div>
     </div>
   </div>
-  <a class="ghost" href="https://pentest.arivanandhan.in" target="_blank" rel="noopener">pentest.arivanandhan.in</a>
 </header>
 
-<main class="layout">
-  <!-- ============ Configuration panel ============ -->
-  <section class="panel" id="config">
-    <h2>New Assessment</h2>
-
-    <label class="field">
-      <span>Target URL or hostname</span>
-      <input id="target" type="text" placeholder="https://example.com" autocomplete="off">
-    </label>
-
-    <div class="field">
-      <span>Scan profile</span>
-      <div id="profiles" class="profiles"><div class="muted">Loading profiles…</div></div>
+<!-- ============ WHAT IT TESTS ============ -->
+<section>
+  <div class="container">
+    <div class="center" style="max-width:680px;margin:0 auto 44px;">
+      <span class="eyebrow">Coverage</span>
+      <h2>A complete offensive test suite</h2>
+      <p class="muted">From reconnaissance to active exploitation, every check a professional
+      web assessment expects — runs automatically.</p>
     </div>
+    <div class="grid grid-3">
+      <div class="card"><div class="ic">🕷️</div><h3>Crawl &amp; map</h3>
+        <p>Spiders the app, mines JavaScript for hidden endpoints, and seeds from robots/sitemap to build the full attack surface.</p></div>
+      <div class="card"><div class="ic">💥</div><h3>Active injection</h3>
+        <p>Verifies real XSS, SQL injection (error/boolean/time), SSRF, command injection, SSTI, path traversal, CRLF and host-header attacks.</p></div>
+      <div class="card"><div class="ic">🔑</div><h3>Authenticated testing</h3>
+        <p>Supply a cookie, bearer token, or headers and the scanner tests everything behind your login.</p></div>
+      <div class="card"><div class="ic">🔍</div><h3>Recon &amp; discovery</h3>
+        <p>Tech &amp; WAF fingerprinting, content discovery, subdomain enumeration via Certificate Transparency, secrets in JS.</p></div>
+      <div class="card"><div class="ic">🔒</div><h3>Config &amp; infra</h3>
+        <p>Security headers, cookies, CORS, TLS/certificate posture, DNS/email security, open ports, and known-vulnerable versions.</p></div>
+      <div class="card"><div class="ic">📊</div><h3>Professional reports</h3>
+        <p>Risk score &amp; grade, OWASP coverage matrix, remediation roadmap, and per-finding evidence — export to PDF or JSON.</p></div>
+    </div>
+  </div>
+</section>
 
-    <details class="field">
-      <summary>Advanced — individual modules</summary>
-      <div id="modules" class="modules"><div class="muted">Loading modules…</div></div>
-      <small class="muted">Leave untouched to use the profile above. Checking modules here overrides the profile selection.</small>
-    </details>
-
-    <details class="field deps">
-      <summary>Authenticated scan (optional) — test behind login</summary>
-      <small class="muted">Provide a session so the crawler and active tests reach authenticated pages. Use any combination.</small>
-      <input id="authCookies" type="text" placeholder="Cookie: session=abc123; csrf=…">
-      <input id="authBearer" type="text" placeholder="Bearer token (without the word 'Bearer')">
-      <textarea id="authHeaders" placeholder="Extra headers, one per line:&#10;X-API-Key: 123&#10;X-Tenant: acme"></textarea>
-    </details>
-
-    <details class="field deps">
-      <summary>Dependency audit (optional) — paste package.json / lockfile</summary>
-      <textarea id="packageJson" placeholder='{ "dependencies": { "lodash": "4.17.20" } }'></textarea>
-      <small class="muted">Enables the OSV dependency audit. Paste a <code>package.json</code> above (and a <code>package-lock.json</code> below) to check for known-vulnerable packages.</small>
-      <textarea id="packageLock" placeholder="package-lock.json (optional)"></textarea>
-    </details>
-
-    <label class="consent">
-      <input id="consent" type="checkbox">
-      <span>I confirm I <b>own</b> the target above or have <b>explicit written authorization</b> to perform security testing against it. I understand unauthorized scanning may be illegal.</span>
-    </label>
-
-    <button id="start" class="primary" disabled>Start Scan</button>
-    <div id="formError" class="error" hidden></div>
-  </section>
-
-  <!-- ============ Results panel ============ -->
-  <section class="panel results" id="results" hidden>
-    <div class="results-head">
-      <div class="rh-left">
-        <h2 id="resultTitle">Scan</h2>
-        <span id="riskBadge" class="riskBadge" hidden></span>
+<!-- ============ HOW IT WORKS ============ -->
+<section class="soft-section">
+  <div class="container">
+    <div class="center" style="max-width:680px;margin:0 auto 44px;">
+      <span class="eyebrow">How it works</span>
+      <h2>Four steps to a full assessment</h2>
+    </div>
+    <div class="grid grid-2" style="max-width:880px;margin:0 auto;">
+      <div class="steps">
+        <div class="step"><div class="n"></div><div><h4>1 · Set your target &amp; consent</h4>
+          <p>Enter a URL and confirm you're authorised to test it. SSRF guards block private/internal hosts on the hosted service.</p></div></div>
+        <div class="step"><div class="n"></div><div><h4>2 · Pick a profile</h4>
+          <p>Passive, Standard, or Aggressive — controlling crawl depth and how intrusive the active tests get.</p></div></div>
       </div>
-      <div class="actions">
-        <button id="downloadPdf" class="primary small" disabled>Download PDF</button>
-        <button id="viewReport" class="secondary" disabled>View Report</button>
-        <button id="exportJson" class="secondary" disabled>JSON</button>
+      <div class="steps">
+        <div class="step"><div class="n"></div><div><h4>3 · Watch it work, live</h4>
+          <p>Findings and the activity log stream in real time over Server-Sent Events as each module runs.</p></div></div>
+        <div class="step"><div class="n"></div><div><h4>4 · Export the report</h4>
+          <p>Get a risk-scored, OWASP-mapped report with remediation guidance — one click to PDF.</p></div></div>
       </div>
     </div>
-
-    <div class="progress">
-      <div class="progress-bar"><i id="bar"></i></div>
-      <div id="phase" class="phase muted">Initializing…</div>
+    <div class="center" style="margin-top:40px;">
+      <a class="btn btn-primary" href="/scan">Start your first scan →</a>
     </div>
+  </div>
+</section>
 
-    <div class="scorecards" id="scorecards"></div>
-
-    <div id="recon" class="recon" hidden></div>
-
-    <div class="split">
-      <div class="findings-col">
-        <h3>Findings <span id="findCount" class="count">0</span></h3>
-        <div id="findings" class="findings"></div>
+<!-- ============ TRUST / SAFETY ============ -->
+<section>
+  <div class="container">
+    <div class="grid grid-2" style="align-items:center;gap:40px;">
+      <div>
+        <span class="eyebrow">Built responsibly</span>
+        <h2>Powerful, but principled</h2>
+        <p class="muted">This is a defensive security tool for authorised testing. Every scan requires
+        an explicit authorisation confirmation, active tests use safe marker-based detection, and the
+        "DoS resilience" check is a capped, non-destructive probe — never a flood or denial-of-service attack.</p>
+        <div class="tags" style="margin-top:18px;">
+          <span class="tag">Consent gate</span>
+          <span class="tag">SSRF protection</span>
+          <span class="tag">Non-destructive</span>
+          <span class="tag">Rate-limit safe</span>
+          <span class="tag">Open source</span>
+        </div>
       </div>
-      <div class="log-col">
-        <h3>Activity Log</h3>
-        <div id="log" class="log"></div>
+      <div class="card">
+        <div class="ic">🛡️</div>
+        <h3>Authorised testing only</h3>
+        <p>Only scan systems you own or have explicit written permission to test. The tool identifies
+        itself in its User-Agent and refuses to scan loopback/private infrastructure on the public host.
+        See the <a href="/legal">Acceptable Use</a> policy.</p>
       </div>
     </div>
-  </section>
-</main>
+  </div>
+</section>
 
-<footer class="foot muted">
-  PenTestTool · authorised testing only · findings reflect target state at scan time.
-</footer>
-
-<script src="/app.js"></script>
+<div id="site-footer"></div>
+<script src="/site.js"></script>
 </body>
 </html>

@@ -15,6 +15,12 @@ const sevTag = (sev) => {
   return `<span class="sev ${m.cls}">${m.label.slice(0, 4).toUpperCase()}</span>`;
 };
 
+const CONF_LABEL = { confirmed: 'Confirmed', firm: 'Firm', tentative: 'Tentative' };
+const confTag = (c) => {
+  const k = c || 'firm';
+  return `<span class="conf conf-${k}">${CONF_LABEL[k] || 'Firm'}</span>`;
+};
+
 const STYLES = `
 :root{
   --navy:#0f2747; --navy2:#1b3a5f; --accent:#b8780a; --accent-soft:#fbe7bd;
@@ -50,6 +56,11 @@ tr:nth-child(even) td{ background:var(--soft); }
 .s-low{ background:var(--low);} .s-info{ background:var(--info);}
 .pill{ display:inline-block; padding:1.5px 8px; border-radius:10px; font-size:8pt; font-weight:600;
   background:#eef2f8; color:#324a6b; border:1px solid #b9c6da; }
+.conf{ display:inline-block; padding:1px 7px; border-radius:10px; font-size:7.5pt; font-weight:700;
+  border:1px solid; white-space:nowrap; }
+.conf-confirmed{ background:#e3f4e4; color:#1d6b22; border-color:#9fce9f; }
+.conf-firm{ background:#eef2f8; color:#324a6b; border-color:#b9c6da; }
+.conf-tentative{ background:#fff6ef; color:#a85b13; border-color:#e8c4a3; }
 .callout{ border:1px solid var(--line); border-left:4px solid var(--accent); background:#fffaf0;
   padding:8pt 12pt; border-radius:4px; margin:8pt 0; }
 .cover{ background:linear-gradient(135deg,var(--navy),var(--navy2)); color:#fff;
@@ -233,15 +244,18 @@ function summaryTable(scan) {
       <td>${esc(f.ref)}</td>
       <td>${esc(f.title)}</td>
       <td>${sevTag(f.severity)}</td>
+      <td>${confTag(f.confidence)}</td>
       <td>${esc([f.cwe, f.owasp?.split(' ')[0]].filter(Boolean).join(' / ') || '—')}</td>
-      <td>${esc(f.category)}</td>
     </tr>`
     )
     .join('');
   return `
   <h2>Summary of Findings</h2>
+  <p class="muted" style="font-size:9pt;"><b>Confidence key:</b> <b>Confirmed</b> = actively reproduced
+  (payload sent and exploit verified); <b>Firm</b> = definitive observation (e.g. missing header, expired
+  certificate); <b>Tentative</b> = heuristic/pattern match — verify manually before acting.</p>
   <table>
-    <tr><th style="width:48px;">ID</th><th>Title</th><th style="width:62px;">Severity</th><th style="width:130px;">CWE / OWASP</th><th style="width:120px;">Category</th></tr>
+    <tr><th style="width:48px;">ID</th><th>Title</th><th style="width:58px;">Severity</th><th style="width:74px;">Confidence</th><th style="width:130px;">CWE / OWASP</th></tr>
     ${rows || '<tr><td colspan="5" class="muted">No findings recorded.</td></tr>'}
   </table>`;
 }
@@ -252,6 +266,7 @@ function detailedFindings(scan) {
     .map((f) => {
       const meta = [
         `<span><b>Severity:</b> ${sevTag(f.severity)}</span>`,
+        `<span><b>Confidence:</b> ${confTag(f.confidence)}</span>`,
         f.cvss != null ? `<span><b>CVSS:</b> ${esc(f.cvss)}</span>` : '',
         f.cwe ? `<span><b>CWE:</b> ${esc(f.cwe)}</span>` : '',
         f.owasp ? `<span><b>OWASP:</b> ${esc(f.owasp)}</span>` : '',

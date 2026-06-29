@@ -55,6 +55,7 @@ export default {
           findings.push(
             finding({
               module: MOD, category: CAT, severity: 'critical', cvss: 9.1,
+              confidence: 'confirmed',
               title: `SSRF in "${param}" — reached ${probe.label}`,
               description:
                 `The \`${param}\` parameter caused the server to fetch an attacker-supplied internal URL and returned content matching ${probe.label}. This confirms Server-Side Request Forgery with access to cloud metadata — typically yielding temporary IAM credentials and full account compromise.`,
@@ -82,6 +83,7 @@ export default {
           findings.push(
             finding({
               module: MOD, category: CAT, severity: 'high', cvss: 7.5,
+              confidence: 'confirmed',
               title: `SSRF in "${param}" — server fetches arbitrary external URLs`,
               description: `Supplying an external URL in \`${param}\` caused the server to retrieve it and return its content (example.com's page was reflected). This is exploitable SSRF; internal services may also be reachable.`,
               evidence: `${pointLabel(point, param)}\nPayload: ${probe}\nServer returned the fetched page content.`,

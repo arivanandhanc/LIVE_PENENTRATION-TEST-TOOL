@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terms &amp; Acceptable Use — Arivanandhan SecTools</title>
+<meta name="description" content="Terms of use, acceptable-use policy, and copyright for Arivanandhan SecTools.">
+<link rel="stylesheet" href="/site.css">
+</head>
+<body>
+<div id="site-nav"></div>
+
+<header class="hero" style="padding:56px 0 48px;">
+  <div class="container">
+    <span class="eyebrow">Legal</span>
+    <h1 style="font-size:2.2rem;">Terms &amp; Acceptable Use</h1>
+    <p class="lead" style="margin-left:0;">The rules for using Arivanandhan SecTools responsibly and lawfully.</p>
+  </div>
+</header>
+
+<section>
+  <div class="container doc-body" style="margin:0 auto;">
+    <p class="muted"><b>Last updated:</b> <span id="updated"></span></p>
+
+    <div class="callout warn"><b>Authorised testing only.</b> By using this Service you confirm that you will
+    only test systems you own or for which you hold explicit, written authorisation. Unauthorised scanning of
+    computer systems is illegal in most jurisdictions (e.g. the Computer Misuse Act, the Computer Fraud and
+    Abuse Act, and equivalents) and may carry civil and criminal penalties.</div>
+
+    <h3>1. Acceptable use</h3>
+    <ul>
+      <li>You may use the Service to assess the security of assets you own or are contracted/permitted to test.</li>
+      <li>You must obtain authorisation <b>before</b> scanning, and stay within the agreed scope.</li>
+      <li>You must comply with all applicable laws and the terms of any third-party platform involved.</li>
+    </ul>
+
+    <h3>2. Prohibited use</h3>
+    <ul>
+      <li>Scanning, probing, or testing any system without authorisation.</li>
+      <li>Using the Service to gain unauthorised access, exfiltrate data, or cause disruption.</li>
+      <li>Attempting to weaponise the Service for denial-of-service or other attacks. The Service is built for
+      defensive assessment; its "DoS resilience" check is a capped, non-destructive probe and must not be
+      represented or used as an attack.</li>
+      <li>Circumventing the authorisation gate or the private-host protections.</li>
+    </ul>
+
+    <h3>3. The authorisation gate</h3>
+    <p>Every scan requires you to affirm that you are authorised to test the target. That affirmation is
+    recorded with the scan. You are solely responsible for the truth of that affirmation and for any
+    consequences of testing without proper authorisation.</p>
+
+    <h3>4. No warranty</h3>
+    <p>The Service is provided "as is", without warranties of any kind. Automated testing is best-effort: it
+    may produce false positives or miss issues, and it does not replace a manual penetration test or code
+    review. Findings reflect the target's state at the time of scanning only.</p>
+
+    <h3>5. Limitation of liability</h3>
+    <p>To the maximum extent permitted by law, the operator and author shall not be liable for any damages
+    arising from use of the Service, including any consequences of testing performed without proper
+    authorisation. You use the Service at your own risk and accept full responsibility for your testing
+    activity.</p>
+
+    <h3 id="copyright">6. Copyright &amp; licence</h3>
+    <p>© <span id="year"></span> Arivanandhan Chitheshwaran. "Arivanandhan SecTools", the
+    <code>sectools.arivanandhan.in</code> site, its design, and documentation are the property of the author.
+    The underlying source code is published under the MIT Licence at the project
+    <a href="https://github.com/arivanandhanc/LIVE_PENENTRATION-TEST-TOOL" target="_blank" rel="noopener">repository</a>;
+    your use of the source is governed by that licence.</p>
+
+    <h3>7. Changes</h3>
+    <p>These terms may be updated; continued use after changes constitutes acceptance.</p>
+
+    <h3>8. Contact</h3>
+    <p>Reach out via <a href="https://arivanandhan.in" target="_blank" rel="noopener">arivanandhan.in</a>.</p>
+
+    <div class="callout" style="margin-top:30px;"><b>Note:</b> These terms are a good-faith template for
+    transparency and are not legal advice. If you operate this Service publicly, have them reviewed by a
+    qualified professional for your jurisdiction.</div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+<script src="/site.js"></script>
+<script>
+  var d=new Date();
+  document.getElementById('updated').textContent=d.toLocaleDateString('en-GB',{year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('year').textContent=d.getFullYear();
+</script>
+</body>
+</html>

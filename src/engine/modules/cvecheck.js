@@ -97,7 +97,7 @@ export default {
 
       findings.push(
         finding({
-          module: MOD, category: CAT, severity: sig.sev,
+          module: MOD, category: CAT, severity: sig.sev, confidence: 'tentative',
           title: `Outdated ${sig.product} ${version} (known vulnerabilities)`,
           description:
             `${sig.product} version ${version} was detected. ${sig.note} Version-based detection can yield false positives if patches were back-ported — confirm against the vendor advisory.`,

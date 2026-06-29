@@ -43,7 +43,7 @@ export default {
         reported.add(key);
         findings.push(
           finding({
-            module: MOD, category: CAT, severity: 'high', cvss: 6.1,
+            module: MOD, category: CAT, severity: 'high', cvss: 6.1, confidence: 'confirmed',
             title: `Reflected XSS in "${param}"`,
             description:
               `A breakout payload injected into the \`${param}\` parameter was reflected into the HTML response with its angle brackets and event handler intact and unencoded. This confirms a reflected cross-site scripting (XSS) vulnerability — an attacker can execute arbitrary JavaScript in a victim's browser session, enabling session hijacking, credential theft, and full client-side compromise.`,

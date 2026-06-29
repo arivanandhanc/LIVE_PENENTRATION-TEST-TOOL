@@ -13,6 +13,13 @@ import { renderReport } from './src/report/generate.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json({ limit: '4mb' }));
+
+// Clean URLs for the multi-page site (must precede static so /scan → scan.html).
+const pages = { '/scan': 'scan.html', '/docs': 'docs.html', '/privacy': 'privacy.html', '/legal': 'legal.html', '/terms': 'legal.html' };
+for (const [route, file] of Object.entries(pages)) {
+  app.get(route, (_req, res) => res.sendFile(path.join(__dirname, 'public', file)));
+}
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Normalise supplied authentication into { cookies, bearer, headers } or null.

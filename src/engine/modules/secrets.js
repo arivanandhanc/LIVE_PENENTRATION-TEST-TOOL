@@ -17,12 +17,13 @@ const PATTERNS = [
   { name: 'GitHub Token', re: /\bgh[pousr]_[0-9A-Za-z]{36,}\b/, sev: 'high' },
   { name: 'GitLab Token', re: /\bglpat-[0-9A-Za-z\-_]{20,}\b/, sev: 'high' },
   { name: 'Private Key Block', re: /-----BEGIN (?:RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY-----/, sev: 'critical' },
-  { name: 'JWT', re: /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/, sev: 'low' },
+  { name: 'JWT', re: /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/, sev: 'low', tentative: true },
   { name: 'Twilio Account SID', re: /\bAC[0-9a-f]{32}\b/, sev: 'medium' },
   { name: 'SendGrid API Key', re: /\bSG\.[0-9A-Za-z\-_]{22}\.[0-9A-Za-z\-_]{43}\b/, sev: 'critical' },
   { name: 'Mailgun API Key', re: /\bkey-[0-9a-f]{32}\b/, sev: 'high' },
   { name: 'Firebase Cloud Messaging Key', re: /\bAAAA[A-Za-z0-9_-]{7}:[A-Za-z0-9_-]{140,}\b/, sev: 'high' },
-  { name: 'Generic Secret Assignment', re: /(?:api[_-]?key|secret|passwd|password|token)["'\s:=]{1,4}["']([A-Za-z0-9\-_/+]{16,})["']/i, sev: 'medium' },
+  // Generic — pattern-based and prone to matching minified library code; flagged tentative.
+  { name: 'Generic Secret Assignment', re: /(?:api[_-]?key|client[_-]?secret|auth[_-]?token)["'\s:=]{1,4}["']([A-Za-z0-9\-_/+]{24,})["']/i, sev: 'low', tentative: true },
 ];
 
 function scan(text, sourceUrl, hits) {
@@ -31,7 +32,7 @@ function scan(text, sourceUrl, hits) {
     if (m) {
       const raw = m[0];
       const masked = raw.length > 12 ? raw.slice(0, 6) + '…' + raw.slice(-4) : raw;
-      hits.push({ name: pat.name, sev: pat.sev, masked, source: sourceUrl });
+      hits.push({ name: pat.name, sev: pat.sev, masked, source: sourceUrl, tentative: !!pat.tentative });
     }
   }
 }
@@ -71,6 +72,7 @@ export default {
     const findings = unique.map((h) =>
       finding({
         module: MOD, category: CAT, severity: h.sev,
+        confidence: h.tentative ? 'tentative' : 'firm',
         title: `Potential exposed secret: ${h.name}`,
         description: `A string matching the signature of a ${h.name} was found in client-delivered code. Secrets embedded in front-end assets are visible to anyone and must be treated as compromised. ${h.name === 'JWT' || h.name === 'Generic Secret Assignment' ? 'This pattern can produce false positives — verify manually.' : ''}`,
         evidence: `Source: ${h.source}\nMatch (masked): ${h.masked}`,

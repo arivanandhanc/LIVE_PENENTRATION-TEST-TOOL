@@ -19,6 +19,10 @@ export function resetFindingCounter() {
  * @param {string} [f.owasp]
  * @param {string} [f.cwe]
  * @param {number} [f.cvss]
+ * @param {('confirmed'|'firm'|'tentative')} [f.confidence]
+ *   confirmed = actively reproduced (payload sent, exploit verified);
+ *   firm      = definitive passive observation (e.g. missing header, expired cert);
+ *   tentative = heuristic/pattern match that warrants manual verification.
  */
 export function finding(f) {
   counter += 1;
@@ -28,6 +32,7 @@ export function finding(f) {
     category: f.category,
     title: f.title,
     severity: f.severity,
+    confidence: f.confidence ?? 'firm',
     description: f.description,
     evidence: f.evidence ?? null,
     recommendation: f.recommendation ?? null,

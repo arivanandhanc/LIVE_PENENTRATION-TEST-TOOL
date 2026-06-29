@@ -43,6 +43,7 @@ export default {
           findings.push(
             finding({
               module: MOD, category: CAT, severity: 'high', cvss: 7.5,
+              confidence: 'confirmed',
               title: `Path Traversal / Local File Inclusion in "${param}"`,
               description:
                 `Supplying a directory-traversal sequence in \`${param}\` returned the contents of a sensitive system file (matched ${PASSWD.test(body) ? '/etc/passwd' : 'win.ini'}). This confirms path traversal, allowing an attacker to read arbitrary files on the server (configuration, source, credentials).`,
@@ -73,6 +74,7 @@ export default {
         findings.push(
           finding({
             module: MOD, category: CAT, severity: 'medium', cvss: 6.1,
+            confidence: 'confirmed',
             title: `CRLF Injection / HTTP Response Splitting in "${param}"`,
             description:
               `A CRLF sequence injected into \`${param}\` was interpreted by the server, producing an attacker-controlled response header (X-Injected-${marker}). CRLF injection enables header injection, response splitting, and cache poisoning.`,
@@ -98,6 +100,7 @@ export default {
         findings.push(
           finding({
             module: MOD, category: CAT, severity: 'medium', cvss: 6.1,
+            confidence: 'confirmed',
             title: 'Host Header Injection',
             description:
               `The application reflected an attacker-supplied Host header (\`${evilHost}\`) into ${loc.includes(evilHost) ? 'a redirect Location header' : 'the response body'}. This can be abused for password-reset poisoning, cache poisoning, and routing-based attacks.`,

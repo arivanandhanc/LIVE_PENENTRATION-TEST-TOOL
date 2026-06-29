@@ -207,10 +207,12 @@ function addFinding(f) {
   const div = document.createElement('div');
   div.className = `fcard ${m.c}`;
   const meta = [f.module, f.cwe, f.owasp].filter(Boolean).join(' · ');
+  const conf = f.confidence || 'firm';
+  const confLabel = { confirmed: 'CONFIRMED', firm: 'FIRM', tentative: 'TENTATIVE' }[conf];
   div.innerHTML = `
     <div class="fh">
       <span class="ft">${esc(f.ref)} — ${esc(f.title)}</span>
-      <span class="badge ${m.b}">${m.s}</span>
+      <span class="fbadges"><span class="conf conf-${conf}" title="Detection confidence">${confLabel}</span><span class="badge ${m.b}">${m.s}</span></span>
     </div>
     <div class="fmeta">${esc(meta)}</div>
     <div class="fdesc">

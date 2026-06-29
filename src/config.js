@@ -28,6 +28,6 @@ export const config = {
   brand: {
     company: process.env.BRAND_COMPANY || 'Arivanandhan',
     product: process.env.BRAND_PRODUCT || 'Security Assessment',
-    site: 'pentest.arivanandhan.in',
+    site: process.env.BRAND_SITE || 'sectools.arivanandhan.in',
   },
 };

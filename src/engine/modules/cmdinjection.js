@@ -57,6 +57,7 @@ export default {
         findings.push(
           finding({
             module: MOD, category: CAT, severity: 'critical', cvss: 9.8,
+            confidence: 'confirmed',
             title: `Server-Side Template Injection in "${param}"`,
             description:
               `The \`${param}\` parameter evaluated a template expression server-side (\`${sstiHit.pl}\` rendered as ${product}), confirming Server-Side Template Injection (${sstiHit.probe.engine}). SSTI typically escalates to remote code execution on the server.`,
@@ -87,6 +88,7 @@ export default {
         findings.push(
           finding({
             module: MOD, category: CAT, severity: 'critical', cvss: 9.8,
+            confidence: 'confirmed',
             title: `OS Command Injection in "${param}"`,
             description:
               `A shell command-substitution payload injected into \`${param}\` produced the echoed marker "${tag}" in the response, confirming OS command injection. This allows arbitrary command execution on the host with the privileges of the web application.`,
@@ -112,6 +114,7 @@ export default {
             findings.push(
               finding({
                 module: MOD, category: CAT, severity: 'critical', cvss: 9.8,
+                confidence: 'confirmed',
                 title: `Blind OS Command Injection (time-based) in "${param}"`,
                 description: `A time-delay command payload in \`${param}\` delayed the response ~5s, indicating blind OS command injection.`,
                 evidence: `${pointLabel(point, param)}\nPayload: ${pl}\nresponse=${r.elapsed}ms`,

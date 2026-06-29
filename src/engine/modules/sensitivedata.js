@@ -56,6 +56,7 @@ export default {
           findings.push(
             finding({
               module: MOD, category: CAT, severity: sig.sev,
+              confidence: sig.name === 'Stack trace / debug error' ? 'firm' : 'tentative',
               title: sig.name,
               description: sig.desc,
               evidence: `URL: ${url}\nMatch: ${String(m[0]).slice(0, 160).replace(/\s+/g, ' ').trim()}`,

@@ -23,7 +23,10 @@ code{ font-family:"Cascadia Code",Consolas,monospace; background:var(--soft); pa
   border-color:rgba(255,255,255,.25); padding:6px 12px; border-radius:8px; }
 .ghost:hover{ background:rgba(255,255,255,.1); }
 
-.layout{ max-width:1180px; margin:24px auto; padding:0 20px; display:grid;
+.scan-header{ background:#fff; border-bottom:1px solid var(--line); padding:30px 0 26px; }
+.scan-header h1{ margin:0 0 4px; font-size:1.85rem; color:var(--navy); }
+.scan-header p{ margin:0; }
+.layout{ margin:26px auto 10px; display:grid;
   grid-template-columns:380px 1fr; gap:20px; align-items:start; }
 @media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
 
@@ -112,6 +115,11 @@ button:disabled{ opacity:.5; cursor:not-allowed; }
 .fcard.med{ border-left-color:var(--med);} .fcard.low{ border-left-color:var(--low);}
 .fcard.info{ border-left-color:var(--info);}
 .fcard .fh{ display:flex; justify-content:space-between; gap:8px; align-items:center; }
+.fbadges{ display:flex; gap:6px; align-items:center; flex:none; }
+.conf{ font-size:9px; font-weight:800; padding:2px 7px; border-radius:10px; letter-spacing:.4px; white-space:nowrap; border:1px solid; }
+.conf-confirmed{ background:#e3f4e4; color:#1d6b22; border-color:#9fce9f; }
+.conf-firm{ background:#eef2f8; color:#324a6b; border-color:#b9c6da; }
+.conf-tentative{ background:#fff6ef; color:#a85b13; border-color:#e8c4a3; }
 .fcard .ft{ font-weight:600; font-size:13.5px; color:var(--navy); }
 .fcard .fmeta{ font-size:11px; color:var(--muted); margin-top:3px; }
 .fcard .fdesc{ font-size:12.5px; margin-top:6px; color:#374050; display:none; }

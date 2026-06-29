@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Arivanandhan SecTools</title>
+<meta name="description" content="Privacy policy for Arivanandhan SecTools — what data the scanner processes, how scan results are stored, and your choices.">
+<link rel="stylesheet" href="/site.css">
+</head>
+<body>
+<div id="site-nav"></div>
+
+<header class="hero" style="padding:56px 0 48px;">
+  <div class="container">
+    <span class="eyebrow">Legal</span>
+    <h1 style="font-size:2.2rem;">Privacy Policy</h1>
+    <p class="lead" style="margin-left:0;">How Arivanandhan SecTools handles the data involved in a scan.</p>
+  </div>
+</header>
+
+<section>
+  <div class="container doc-body" style="margin:0 auto;">
+    <p class="muted"><b>Last updated:</b> <span id="updated"></span></p>
+
+    <h3>1. Who we are</h3>
+    <p>Arivanandhan SecTools ("the Service", "we") is a web-application security-testing tool operated by
+    Arivanandhan Chitheshwaran at <code>sectools.arivanandhan.in</code>. This policy explains what data the
+    Service processes when you run a scan.</p>
+
+    <h3>2. Data you provide</h3>
+    <ul>
+      <li><b>Target details</b> — the URL/hostname you ask us to scan.</li>
+      <li><b>Scan configuration</b> — the chosen profile and modules.</li>
+      <li><b>Optional credentials</b> — if you choose an authenticated scan, any cookies, bearer token, or
+      headers you supply. These are used <b>only</b> to send authenticated requests to <em>your</em> target
+      during that scan.</li>
+      <li><b>Optional manifests</b> — a <code>package.json</code>/lockfile you paste for the dependency audit.</li>
+    </ul>
+
+    <h3>3. Data we generate</h3>
+    <p>Running a scan produces a scan record: the discovered attack surface, the findings, an activity log,
+    and the generated report. By default these are stored as JSON files on the server hosting the Service so
+    you can revisit the result and export the report.</p>
+
+    <h3>4. How credentials are handled</h3>
+    <div class="callout"><p style="margin:0;">Authentication material you supply for an authenticated scan is
+    held in memory for the duration of the scan and used solely to authenticate requests to the target you
+    specified. <b>Treat any session you paste as disposable</b> — revoke/rotate it after testing. Do not paste
+    long-lived production credentials.</p></div>
+
+    <h3>5. Outbound requests</h3>
+    <p>To perform a scan, the Service makes HTTP(S) requests to the target you specify and may query public
+    threat-intelligence sources on your behalf, including the OSV vulnerability database (for the dependency
+    audit) and Certificate Transparency logs via crt.sh (for subdomain enumeration). Only the data necessary
+    for those lookups (e.g. package names/versions, the apex domain) is sent.</p>
+
+    <h3>6. Retention &amp; deletion</h3>
+    <p>Scan records persist on the host until deleted. If you self-host, you control retention entirely — scan
+    JSON lives in the <code>data/</code> directory and can be removed at any time. On the hosted service,
+    contact us to request deletion of a specific scan record.</p>
+
+    <h3>7. What we do not do</h3>
+    <ul>
+      <li>We do not sell or share your scan data with third parties for marketing.</li>
+      <li>We do not use supplied credentials for any purpose beyond the requested scan.</li>
+      <li>We do not scan targets you have not explicitly submitted.</li>
+    </ul>
+
+    <h3>8. Your responsibilities</h3>
+    <p>You must only scan systems you own or are explicitly authorised to test. See the
+    <a href="/legal">Acceptable Use policy</a>.</p>
+
+    <h3>9. Contact</h3>
+    <p>Questions about this policy: via <a href="https://arivanandhan.in" target="_blank" rel="noopener">arivanandhan.in</a>.</p>
+
+    <div class="callout warn" style="margin-top:30px;"><b>Note:</b> This policy is provided for transparency
+    about the tool's data handling and is not legal advice. If you operate this Service publicly, have it
+    reviewed against the privacy laws applicable to you and your users.</div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+<script src="/site.js"></script>
+<script>document.getElementById('updated').textContent = new Date().toLocaleDateString('en-GB',{year:'numeric',month:'long',day:'numeric'});</script>
+</body>
+</html>

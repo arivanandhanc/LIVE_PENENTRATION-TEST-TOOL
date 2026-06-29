@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentation — Arivanandhan SecTools</title>
+<meta name="description" content="Documentation for Arivanandhan SecTools: architecture, code structure, how the testing engine works, the full module reference, and the API.">
+<link rel="stylesheet" href="/site.css">
+</head>
+<body>
+<div id="site-nav"></div>
+
+<header class="hero" style="padding:64px 0 56px;">
+  <div class="container">
+    <span class="eyebrow">Documentation</span>
+    <h1 style="font-size:2.4rem;">How it's built &amp; how it tests</h1>
+    <p class="lead" style="margin-left:0;">A complete walkthrough of the architecture, the code structure,
+    the testing methodology, every scan module, and the HTTP API.</p>
+  </div>
+</header>
+
+<section>
+  <div class="container doc">
+    <!-- Sidebar -->
+    <aside class="doc-side">
+      <div class="grp">Overview</div>
+      <a href="#overview">What it is</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#structure">Code structure</a>
+      <div class="grp">Engine</div>
+      <a href="#how">How testing works</a>
+      <a href="#profiles">Scan profiles</a>
+      <a href="#modules">Module reference</a>
+      <a href="#auth">Authenticated scanning</a>
+      <div class="grp">Reference</div>
+      <a href="#api">HTTP API</a>
+      <a href="#reports">Reports</a>
+      <a href="#selfhost">Self-hosting</a>
+    </aside>
+
+    <!-- Body -->
+    <div class="doc-body">
+      <h2 id="overview">What it is</h2>
+      <p>Arivanandhan SecTools is an <b>active</b> web-application penetration-testing suite. Unlike a passive
+      header checker, it first <b>crawls</b> the target to map its real attack surface, then runs a battery of
+      <b>25 modules</b> — including active injection tests that send safe, uniquely-marked payloads and confirm
+      vulnerabilities from the application's actual response.</p>
+      <p>It is delivered as a single Node.js process: an Express backend exposing a small JSON API and a
+      zero-build vanilla-JavaScript frontend. Scans stream their progress live to the browser over
+      Server-Sent Events (SSE).</p>
+      <div class="callout"><b>Defensive by design.</b> Every scan requires an explicit authorisation
+      confirmation. Active tests are non-destructive and marker-based. The hosted service refuses to scan
+      loopback/private hosts to prevent SSRF abuse.</div>
+
+      <h2 id="architecture">Architecture</h2>
+      <p>Three layers, one process:</p>
+      <div class="pre"><span class="c">┌──────────────────────────────────────────────────────────┐</span>
+<span class="c">│</span>  Frontend (public/)   vanilla JS + SSE, no build step     <span class="c">│</span>
+<span class="c">│    index / scan / docs / privacy / legal  ·  app.js       │</span>
+<span class="c">├──────────────────────────────────────────────────────────┤</span>
+<span class="c">│</span>  Backend (server.js)  Express: REST API + SSE + reports   <span class="c">│</span>
+<span class="c">├──────────────────────────────────────────────────────────┤</span>
+<span class="c">│</span>  Engine (src/engine/) orchestrator → crawler → modules    <span class="c">│</span>
+<span class="c">│    severity · findings · profiles · 25 scan modules       │</span>
+<span class="c">└──────────────────────────────────────────────────────────┘</span></div>
+      <table class="tbl">
+        <tr><th>Layer</th><th>Responsibility</th></tr>
+        <tr><td><b>Frontend</b></td><td>Collect target/profile/auth, render live findings &amp; activity log, trigger report export. Pure HTML/CSS/JS — nothing to compile.</td></tr>
+        <tr><td><b>Backend</b></td><td>Express server: creates scans, enforces the authorization gate, streams progress over SSE, and serves HTML/PDF/JSON reports.</td></tr>
+        <tr><td><b>Engine</b></td><td>The orchestrator resolves the target (with SSRF guards), runs the crawler, then executes each selected module, collecting normalised findings.</td></tr>
+      </table>
+
+      <h2 id="structure">Code structure</h2>
+      <p>Every file has one clear job:</p>
+      <div class="pre">PENTESTTOOL/
+├── <span class="k">server.js</span>              <span class="c"># Express API, SSE, report endpoints, auth gate</span>
+├── public/                <span class="c"># Frontend (served statically)</span>
+│   ├── index / scan / docs / privacy / legal.html
+│   ├── site.css · site.js <span class="c"># Shared theme + nav/footer</span>
+│   ├── styles.css         <span class="c"># Scanner tool UI</span>
+│   └── app.js             <span class="c"># Scanner logic + SSE client</span>
+└── src/
+    ├── config.js          <span class="c"># Env-driven configuration</span>
+    ├── store.js           <span class="c"># Scan registry + JSON persistence</span>
+    ├── util/
+    │   ├── http.js        <span class="c"># fetch wrapper + per-scan auth (AsyncLocalStorage)</span>
+    │   ├── target.js      <span class="c"># URL parsing + SSRF/private-host guards</span>
+    │   └── cvss.js        <span class="c"># CVSS v3.1 base-score calculator</span>
+    ├── engine/
+    │   ├── orchestrator.js <span class="c"># Runs crawl + modules, emits progress</span>
+    │   ├── crawler.js      <span class="c"># Spider + JS endpoint mining</span>
+    │   ├── inject.js       <span class="c"># Payload delivery into params/forms</span>
+    │   ├── profiles.js     <span class="c"># Passive / Standard / Aggressive</span>
+    │   ├── severity.js     <span class="c"># Severity model + risk score</span>
+    │   ├── finding.js      <span class="c"># Normalised finding shape</span>
+    │   └── modules/        <span class="c"># The 25 scan modules</span>
+    └── report/
+        └── generate.js     <span class="c"># Professional HTML/PDF report</span></div>
+
+      <h2 id="how">How the testing works</h2>
+      <p>A scan runs as a pipeline. Each stage feeds the next:</p>
+      <div class="steps">
+        <div class="step"><div class="n"></div><div><h4>Resolve &amp; guard</h4>
+          <p>The target URL is parsed and DNS-resolved. On the hosted service, any target resolving to a
+          loopback/private/link-local address is rejected (SSRF protection).</p></div></div>
+        <div class="step"><div class="n"></div><div><h4>Crawl &amp; map the surface</h4>
+          <p>The crawler performs a same-origin breadth-first spider (bounded by the profile's page/depth
+          budget), parses forms and query parameters, seeds extra paths from <code>robots.txt</code> and
+          <code>sitemap.xml</code>, and mines JavaScript files for hidden API endpoints. The output is a
+          <em>surface</em> — the set of pages, forms, and injection points.</p></div></div>
+        <div class="step"><div class="n"></div><div><h4>Run the modules</h4>
+          <p>The orchestrator runs each selected module in turn, passing it a shared context (the target,
+          the crawl surface, request budgets, and a logger). Passive modules inspect responses; active
+          modules send safe, uniquely-marked payloads into each discovered injection point and inspect the
+          result for confirmation.</p></div></div>
+        <div class="step"><div class="n"></div><div><h4>Confirm, score &amp; report</h4>
+          <p>Each confirmed issue becomes a normalised <em>finding</em> with severity, CVSS, CWE, OWASP
+          mapping, evidence, and remediation. Findings are tallied into a risk score and rendered into the
+          report.</p></div></div>
+      </div>
+
+      <h3>Why detection is reliable (low false-positives)</h3>
+      <ul>
+        <li><b>Unique markers.</b> XSS uses a random breakout token; SSTI uses a random arithmetic product
+        (e.g. <code>73×74</code>) so a literal echo can't be mistaken for evaluation.</li>
+        <li><b>Reflection guards.</b> SSRF only fires when the response contains fetched content that is
+        <em>not</em> just our echoed payload URL.</li>
+        <li><b>Differential analysis.</b> Boolean SQLi compares TRUE vs FALSE response sizes against a baseline.</li>
+        <li><b>Soft-404 baselines.</b> Content/file discovery compares against a known-missing page so
+        catch-all apps don't produce phantom findings.</li>
+      </ul>
+
+      <h2 id="profiles">Scan profiles</h2>
+      <table class="tbl">
+        <tr><th>Profile</th><th>Crawl</th><th>Active tests</th><th>Use for</th></tr>
+        <tr><td><b>Passive Recon</b></td><td>Off</td><td>None</td><td>Sensitive/production targets — OSINT &amp; config only.</td></tr>
+        <tr><td><b>Standard</b></td><td>40 pages, depth 2</td><td>Safe (XSS, SQLi error/boolean, SSRF)</td><td>The recommended default.</td></tr>
+        <tr><td><b>Aggressive (Full)</b></td><td>100 pages, depth 3</td><td>Full suite incl. time-based blind &amp; command injection, port recon, DoS-resilience</td><td>Authorised, non-production targets.</td></tr>
+      </table>
+
+      <h2 id="modules">Module reference (25)</h2>
+      <table class="tbl">
+        <tr><th>Module</th><th>Category</th><th>What it checks</th></tr>
+        <tr><td>Technology Fingerprint</td><td>Recon</td><td>Servers, frameworks, CMS, JS libs, WAF/CDN.</td></tr>
+        <tr><td>Known Vulnerable Versions</td><td>Recon</td><td>jQuery/Bootstrap/Angular/Lodash/nginx/Apache/PHP/OpenSSH CVE bands.</td></tr>
+        <tr><td>Security Headers</td><td>Web</td><td>HSTS, CSP, X-Frame-Options, nosniff, Referrer/Permissions-Policy.</td></tr>
+        <tr><td>Cookie Security</td><td>Web</td><td>Secure / HttpOnly / SameSite flags.</td></tr>
+        <tr><td>CORS Configuration</td><td>Web</td><td>Wildcard and arbitrary-origin reflection.</td></tr>
+        <tr><td>Information Disclosure</td><td>Web</td><td>Version banners, framework fingerprints.</td></tr>
+        <tr><td>Exposed Files</td><td>Web</td><td>.git, .env, .DS_Store, server-status, phpinfo.</td></tr>
+        <tr><td>HTTP Methods</td><td>Web</td><td>Dangerous verbs, TRACE / XST.</td></tr>
+        <tr><td>Content Discovery</td><td>Web</td><td>Admin panels, backups, API/swagger, actuator, cloud creds.</td></tr>
+        <tr><td>Exposed Secrets</td><td>Web</td><td>AWS/Google/Stripe/GitHub keys, JWTs, private keys in JS/HTML.</td></tr>
+        <tr><td>Sensitive Data Exposure</td><td>Web</td><td>Stack traces, internal IPs, verbose errors in responses.</td></tr>
+        <tr><td>GraphQL Security</td><td>Web</td><td>Endpoint discovery + introspection exposure.</td></tr>
+        <tr><td>Cross-Site Request Forgery</td><td>Web</td><td>State-changing forms lacking anti-CSRF tokens.</td></tr>
+        <tr><td><b>XSS (Active)</b></td><td>Web</td><td>Reflected XSS via breakout payloads.</td></tr>
+        <tr><td><b>SQL Injection (Active)</b></td><td>Web</td><td>Error-based, boolean-blind, time-based.</td></tr>
+        <tr><td><b>Command Injection &amp; SSTI</b></td><td>Web</td><td>Echo/arithmetic markers + time-based.</td></tr>
+        <tr><td><b>Path Traversal / CRLF / Host</b></td><td>Web</td><td>LFI, response splitting, host-header injection.</td></tr>
+        <tr><td><b>SSRF (Active)</b></td><td>Web</td><td>URL-param probing incl. AWS/Azure/GCP metadata.</td></tr>
+        <tr><td>Injection &amp; Redirect Probes</td><td>Web</td><td>Reflected canary, open redirect.</td></tr>
+        <tr><td>TLS / Certificate</td><td>TLS/DNS</td><td>Trust, expiry, protocol version.</td></tr>
+        <tr><td>DNS &amp; Email Security</td><td>TLS/DNS</td><td>A/AAAA/MX/NS/TXT, SPF, DMARC.</td></tr>
+        <tr><td>Subdomain Enumeration</td><td>TLS/DNS</td><td>Certificate Transparency (crt.sh) + live resolution.</td></tr>
+        <tr><td>Port &amp; Service Recon</td><td>Network</td><td>TCP connect scan of common ports.</td></tr>
+        <tr><td>DoS Resilience &amp; Rate Limiting</td><td>Network</td><td>Capped, non-destructive burst to check for rate limiting.</td></tr>
+        <tr><td>Dependency Audit (OSV)</td><td>Dependencies</td><td>Known-vuln check from pasted package.json/lockfile.</td></tr>
+      </table>
+
+      <h2 id="auth">Authenticated scanning</h2>
+      <p>Supply a session and the crawler plus every active module will test <b>behind your login</b>. You can
+      provide any combination of a Cookie header, a Bearer token, and arbitrary extra headers.</p>
+      <p>Internally this uses Node's <code>AsyncLocalStorage</code>: the whole scan runs inside an auth context,
+      so every HTTP request automatically carries the credentials — and concurrent scans never leak auth to
+      each other.</p>
+
+      <h2 id="api">HTTP API</h2>
+      <table class="tbl">
+        <tr><th>Method · Path</th><th>Description</th></tr>
+        <tr><td><code>GET /api/modules</code></td><td>List available scan modules.</td></tr>
+        <tr><td><code>GET /api/profiles</code></td><td>List scan profiles.</td></tr>
+        <tr><td><code>POST /api/scans</code></td><td>Create + start a scan. Requires <code>authorization.consent</code>.</td></tr>
+        <tr><td><code>GET /api/scans/:id</code></td><td>Full scan state (polling).</td></tr>
+        <tr><td><code>GET /api/scans/:id/stream</code></td><td>Live progress (Server-Sent Events).</td></tr>
+        <tr><td><code>GET /api/scans/:id/report</code></td><td>HTML report (<code>?print=1</code> auto-opens Save-as-PDF).</td></tr>
+        <tr><td><code>GET /api/scans/:id/report.pdf</code></td><td>Print-ready report that auto-triggers PDF export.</td></tr>
+        <tr><td><code>GET /api/scans/:id/export.json</code></td><td>JSON export.</td></tr>
+      </table>
+      <div class="pre"><span class="c"># Start a standard scan</span>
+curl -X POST https://sectools.arivanandhan.in/api/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target":"https://example.com","profile":"standard",
+       "authorization":{"consent":true}}'</div>
+
+      <h2 id="reports">Reports</h2>
+      <p>Reports open with an executive summary carrying a <b>0–100 risk score and A–F grade</b>, then a
+      confidentiality notice, document control, risk-rating methodology, reconnaissance &amp; attack surface,
+      a findings table, the <b>OWASP Top 10 (2021) coverage matrix</b>, a <b>remediation roadmap</b>, and
+      detailed per-finding write-ups with CVSS, CWE, evidence and references. Export to <b>PDF</b> (one-click
+      print-to-PDF — no headless browser required) or <b>JSON</b>.</p>
+
+      <h2 id="selfhost">Self-hosting</h2>
+      <p>Runs as a single Node process — ideal for a small VPS (not serverless, because port recon and the
+      burst check need raw TCP sockets and long-lived SSE).</p>
+      <div class="pre">git clone https://github.com/arivanandhanc/LIVE_PENENTRATION-TEST-TOOL.git
+cd LIVE_PENENTRATION-TEST-TOOL
+npm ci --omit=dev
+cp .env.example .env        <span class="c"># keep ALLOW_PRIVATE=false on a public host</span>
+node server.js              <span class="c"># http://localhost:3000</span></div>
+      <p>The repository ships a <code>Dockerfile</code>, a <code>systemd</code> unit, and an nginx config (with
+      SSE-safe proxy settings) under <code>deploy/</code>.</p>
+
+      <div class="callout warn"><b>Authorised use only.</b> Read the <a href="/legal">Acceptable Use</a> and
+      <a href="/privacy">Privacy</a> policies before scanning any system you do not own.</div>
+    </div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+<script src="/site.js"></script>
+</body>
+</html>

@@ -57,7 +57,7 @@ export default {
           const snippet = (errRes.body.match(match) || [''])[0].slice(0, 160);
           findings.push(
             finding({
-              module: MOD, category: CAT, severity: 'critical', cvss: 9.8,
+              module: MOD, category: CAT, severity: 'critical', cvss: 9.8, confidence: 'confirmed',
               title: `Error-based SQL Injection in "${param}"`,
               description:
                 `Injecting SQL metacharacters into the \`${param}\` parameter triggered a database error message in the response, confirming the input is concatenated into a SQL query without proper parameterisation. SQL injection can lead to full database disclosure, authentication bypass, data manipulation, and in many cases remote code execution on the database host.`,
@@ -85,7 +85,7 @@ export default {
           reported.add(key);
           findings.push(
             finding({
-              module: MOD, category: CAT, severity: 'critical', cvss: 9.1,
+              module: MOD, category: CAT, severity: 'critical', cvss: 9.1, confidence: 'confirmed',
               title: `Boolean-based blind SQL Injection in "${param}"`,
               description:
                 `The \`${param}\` parameter exhibits boolean-based blind SQL injection: a query that is logically TRUE returns a response matching the baseline, while a logically FALSE variant returns a materially different response. This indicates the parameter alters the SQL WHERE clause and is exploitable to extract data character-by-character.`,
@@ -120,6 +120,7 @@ export default {
           findings.push(
             finding({
               module: MOD, category: CAT, severity: 'critical', cvss: 9.1,
+              confidence: 'confirmed',
               title: `Time-based blind SQL Injection in "${param}"`,
               description:
                 `A time-delay SQL payload injected into \`${param}\` caused the response to be delayed by ~5 seconds versus a baseline of ${baseT}ms, confirming time-based blind SQL injection. The database executes attacker-controlled SQL, allowing full data extraction even with no visible output.`,
