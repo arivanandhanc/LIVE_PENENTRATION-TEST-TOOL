@@ -7,12 +7,33 @@ import { config } from './config.js';
 
 const scans = new Map();
 
+// Persistence is best-effort. If the data directory can't be created/written
+// (read-only filesystem, missing permissions, hardened container), the tool
+// falls back to in-memory operation rather than failing the request.
+let persistDisabled = false;
+
 function dataPath(id) {
   return path.join(config.dataDir, `${id}.json`);
 }
 
 function ensureDir() {
-  fs.mkdirSync(config.dataDir, { recursive: true });
+  if (persistDisabled) return false;
+  try {
+    fs.mkdirSync(config.dataDir, { recursive: true });
+    return true;
+  } catch (e) {
+    persistDisabled = true;
+    console.error(
+      `[store] Persistence disabled — cannot use data dir "${config.dataDir}" ` +
+        `(${e.code || e.message}). Scans will run in memory only. ` +
+        `Set DATA_DIR to a writable path to enable saved results.`
+    );
+    return false;
+  }
+}
+
+export function persistenceStatus() {
+  return { enabled: !persistDisabled, dir: config.dataDir };
 }
 
 export function newId() {
@@ -69,11 +90,13 @@ export function listScans() {
 }
 
 export function persist(scan) {
+  if (persistDisabled) return;
+  if (!ensureDir()) return;
   try {
-    ensureDir();
     fs.writeFileSync(dataPath(scan.id), JSON.stringify(scan, null, 2));
   } catch (e) {
     // Persistence is best-effort; never crash a scan over a disk error.
-    console.error('persist failed', scan.id, e.message);
+    persistDisabled = true;
+    console.error('[store] persist failed, disabling persistence:', scan.id, e.message);
   }
 }

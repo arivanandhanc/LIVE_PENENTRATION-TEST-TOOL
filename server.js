@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from './src/config.js';
 import { parseTarget } from './src/util/target.js';
-import { createScan, getScan, listScans } from './src/store.js';
+import { createScan, getScan, listScans, persistenceStatus } from './src/store.js';
 import { runScan, events } from './src/engine/orchestrator.js';
 import { moduleCatalog } from './src/engine/modules/index.js';
 import { profileCatalog } from './src/engine/profiles.js';
@@ -168,8 +168,10 @@ app.get('/api/scans/:id/export.json', (req, res) => {
   res.json(scan);
 });
 
-// --- Health check ---
-app.get('/api/health', (_req, res) => res.json({ ok: true, version: '1.0.0' }));
+// --- Health check (reports persistence status to aid deploy diagnostics) ---
+app.get('/api/health', (_req, res) =>
+  res.json({ ok: true, version: '1.0.0', persistence: persistenceStatus() })
+);
 
 // --- Any unmatched /api/* route returns JSON (never an HTML page) so the
 //     frontend always gets parseable responses. ---
@@ -185,7 +187,9 @@ app.use((err, req, res, _next) => {
   }
   console.error('Unhandled error:', err);
   if (req.path.startsWith('/api/')) {
-    return res.status(500).json({ error: 'Internal server error.' });
+    // Surface the real cause — this is an operator-run security tool, and a
+    // generic message makes deploy issues (e.g. read-only filesystem) opaque.
+    return res.status(500).json({ error: 'Internal server error.', detail: err && err.message });
   }
   res.status(500).send('Internal server error.');
 });

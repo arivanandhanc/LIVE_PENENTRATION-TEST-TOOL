@@ -146,6 +146,22 @@ site: serving only the `public/` folder will not work. Check that:
 The app now detects this and shows a clear banner plus a readable error instead of
 the raw JSON-parse message.
 
+**"Internal server error" when starting a scan.**
+Usually the server cannot write the `data/` directory (read-only filesystem,
+wrong permissions, or a hardened container). As of v1.0 the tool no longer crashes
+on this — it falls back to **in-memory** scans and logs a warning — but to persist
+results, point `DATA_DIR` at a writable path and ensure the process can write it:
+
+```bash
+DATA_DIR=/var/lib/pentesttool node server.js   # any writable dir
+```
+
+`GET /api/health` reports `persistence.enabled`. If it's `false`, the data dir
+isn't writable. The systemd unit sets `DATA_DIR=/opt/pentesttool/data` and a
+matching `ReadWritePaths`. Docker users should mount a writable volume at
+`/app/data` (the provided `Dockerfile` already declares it). API errors now include
+a `detail` field with the underlying cause to aid diagnosis.
+
 ## Roadmap
 
 - Server-side PDF rendering (Puppeteer) for one-click PDF export
