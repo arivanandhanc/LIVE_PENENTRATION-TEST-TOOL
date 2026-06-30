@@ -366,10 +366,18 @@ function reconSection(scan) {
   if (i.subdomains?.live) blocks.push(`<tr><td>Subdomains (live)</td><td>${i.subdomains.live} of ${i.subdomains.discovered} from CT logs</td></tr>`);
   if (i.openPorts?.length) blocks.push(`<tr><td>Open ports</td><td>${esc(i.openPorts.map((p) => `${p.port}/${p.service}`).join(', '))}</td></tr>`);
   if (i.discovered?.length) blocks.push(`<tr><td>Discovered paths</td><td>${esc(i.discovered.slice(0, 20).join(', '))}</td></tr>`);
-  if (!blocks.length) return '';
+  if (!blocks.length && !i.observedHeaders) return '';
+  const obs = i.observedHeaders;
+  const headerProof = obs
+    ? `<h3>Observed response headers (proof)</h3>
+       <p class="muted" style="font-size:9pt;">The exact security-relevant headers returned by the target (${esc(obs.status)}). Header-based findings below are derived from these observed values.</p>
+       <pre>${esc(obs.headers.join('\n'))}</pre>`
+    : '';
+
   return `
   <h2>Reconnaissance &amp; Attack Surface</h2>
-  <table><tr><th style="width:170px;">Item</th><th>Detail</th></tr>${blocks.join('')}</table>
+  ${blocks.length ? `<table><tr><th style="width:170px;">Item</th><th>Detail</th></tr>${blocks.join('')}</table>` : ''}
+  ${headerProof}
   ${i.subdomains?.hosts?.length ? `<h3>Live subdomains</h3><pre>${esc(i.subdomains.hosts.slice(0, 50).map((h) => `${h.name} → ${h.ip}`).join('\n'))}</pre>` : ''}`;
 }
 

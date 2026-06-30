@@ -26,6 +26,18 @@ export default {
       poweredBy: h['x-powered-by'] || null,
     };
 
+    // Capture the actual security-relevant response headers as verifiable proof
+    // (shown in the report so every header finding can be cross-checked).
+    const SEC_HEADERS = [
+      'strict-transport-security', 'content-security-policy', 'x-frame-options',
+      'x-content-type-options', 'referrer-policy', 'permissions-policy',
+      'access-control-allow-origin', 'server', 'x-powered-by',
+    ];
+    ctx.info.observedHeaders = {
+      status: `${res.status} on ${ctx.target.url}`,
+      headers: SEC_HEADERS.map((k) => `${k}: ${h[k] ?? '(absent)'}`),
+    };
+
     // --- HSTS ---
     if (https && !h['strict-transport-security']) {
       findings.push(

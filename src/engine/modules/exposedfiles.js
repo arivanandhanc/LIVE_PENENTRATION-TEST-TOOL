@@ -8,15 +8,18 @@ const CAT = 'Web Application';
 const MOD = 'Exposed Files & Endpoints';
 
 const PROBES = [
-  { path: '/.git/config', sev: 'high', sig: /\[core\]|repositoryformatversion/i,
+  { path: '/.git/config', sev: 'high', sig: /\[core\]|repositoryformatversion/i, nonHtml: true,
     title: 'Exposed .git repository',
     desc: 'A reachable /.git/config indicates the version-control directory is web-accessible. Attackers can reconstruct full source code (and any committed secrets) from the exposed objects.',
     rec: 'Block access to the .git directory at the web server, or deploy without the VCS metadata.', cwe: 'CWE-538' },
-  { path: '/.env', sev: 'critical', sig: /[A-Z_]{3,}=.+/,
+  // .env: require lines that look like ENV assignments (KEY=value), and the
+  // response must NOT be an HTML page — otherwise a catch-all 200 page that
+  // happens to contain "WIDTH=100" style text would false-positive.
+  { path: '/.env', sev: 'critical', sig: /^[A-Z][A-Z0-9_]{2,}\s*=\s*\S/m, nonHtml: true,
     title: 'Exposed .env file',
     desc: 'The application’s .env configuration file is publicly readable. These files routinely contain database credentials, API keys, and secrets, leading directly to full compromise.',
     rec: 'Remove .env from the web root and block it at the server; rotate any exposed secrets immediately.', cwe: 'CWE-538', cvss: 9.1 },
-  { path: '/.DS_Store', sev: 'low', sig: /Bud1|\x00/,
+  { path: '/.DS_Store', sev: 'low', sig: /Bud1|\x00\x00\x00/, nonHtml: true,
     title: 'Exposed .DS_Store file',
     desc: 'A macOS .DS_Store file is accessible and can leak directory/file names, aiding further enumeration.',
     rec: 'Remove .DS_Store files from deployments and block the pattern at the server.', cwe: 'CWE-538' },
@@ -63,6 +66,11 @@ export default {
       const url = new URL(p.path, ctx.target.url).toString();
       const res = await request(url, { redirect: 'manual', maxBytes: 16 * 1024 });
       if (!res.ok) continue;
+      const ctype = res.headers['content-type'] || '';
+      const isHtml = /text\/html|application\/xhtml/i.test(ctype);
+      // Config/VCS/metadata files are never served as HTML — if the response is
+      // an HTML page, it's the app's catch-all, not the file. Reject it.
+      if (p.nonHtml && isHtml) continue;
       const hit = res.status === 200 && p.sig.test(res.body);
       // When the app soft-404s with 200, a real artefact must look *different*
       // from the catch-all page; otherwise the signature matched the fallback
@@ -72,7 +80,7 @@ export default {
       if (hit && !looksLikeFallback) {
         findings.push(
           finding({
-            module: MOD, category: CAT, severity: p.sev,
+            module: MOD, category: CAT, severity: p.sev, confidence: 'firm',
             title: p.title, description: p.desc,
             evidence: `GET ${p.path} → ${res.status}\n${res.body.slice(0, 160).replace(/\s+/g, ' ').trim()}`,
             recommendation: p.rec,
