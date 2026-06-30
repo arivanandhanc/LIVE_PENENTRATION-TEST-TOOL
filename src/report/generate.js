@@ -16,10 +16,26 @@ const sevTag = (sev) => {
 };
 
 const CONF_LABEL = { confirmed: 'Confirmed', firm: 'Firm', tentative: 'Tentative' };
+const CONF_ORDER = { confirmed: 3, firm: 2, tentative: 1 };
 const confTag = (c) => {
   const k = c || 'firm';
   return `<span class="conf conf-${k}">${CONF_LABEL[k] || 'Firm'}</span>`;
 };
+
+// Findings ordered worst-first: by severity, then by detection confidence.
+function sortedFindings(scan) {
+  return [...(scan.findings || [])].sort((a, b) => {
+    const sw = (SEVERITY_META[b.severity]?.weight || 0) - (SEVERITY_META[a.severity]?.weight || 0);
+    if (sw) return sw;
+    return (CONF_ORDER[b.confidence] || 0) - (CONF_ORDER[a.confidence] || 0);
+  });
+}
+
+function confidenceCounts(scan) {
+  const c = { confirmed: 0, firm: 0, tentative: 0 };
+  for (const f of scan.findings || []) c[f.confidence || 'firm']++;
+  return c;
+}
 
 const STYLES = `
 :root{
@@ -200,8 +216,19 @@ function execSummary(scan) {
   const seg = (s, color) => (c2[s] ? `<i style="width:${(c2[s] / barTotal) * 100}%;background:${color}"></i>` : '');
   const authBadge = scan.info?.authenticated ? '<span class="pill" style="background:#e3f4e4;color:#1d6b22;border-color:#9fce9f;">Authenticated scan</span>' : '';
 
+  const cc = confidenceCounts(scan);
+  const confirmedExploit = (scan.findings || []).filter(
+    (f) => f.confidence === 'confirmed' && ['critical', 'high'].includes(f.severity)
+  ).length;
+  const plain =
+    `This scan recorded <b>${cc.confirmed}</b> actively-confirmed ${cc.confirmed === 1 ? 'finding' : 'findings'}` +
+    (confirmedExploit ? ` (including <b>${confirmedExploit}</b> confirmed exploitable vulnerabilit${confirmedExploit === 1 ? 'y' : 'ies'})` : '') +
+    `, <b>${cc.firm}</b> firm configuration/observation ${cc.firm === 1 ? 'issue' : 'issues'}, and ` +
+    `<b>${cc.tentative}</b> tentative ${cc.tentative === 1 ? 'item' : 'items'} requiring manual verification.`;
+
   return `
   <h2>Executive Summary</h2>
+  <div class="callout"><p style="margin:0;">${plain}</p></div>
   <div class="riskbox">
     <div class="riskscore" style="border-color:${gradeColor}">
       <div class="rg" style="color:${gradeColor}">${esc(grade)}</div>
@@ -238,7 +265,7 @@ function postureColor(p) {
 }
 
 function summaryTable(scan) {
-  const rows = scan.findings
+  const rows = sortedFindings(scan)
     .map(
       (f) => `<tr>
       <td>${esc(f.ref)}</td>
@@ -262,7 +289,7 @@ function summaryTable(scan) {
 
 function detailedFindings(scan) {
   if (!scan.findings.length) return '';
-  const blocks = scan.findings
+  const blocks = sortedFindings(scan)
     .map((f) => {
       const meta = [
         `<span><b>Severity:</b> ${sevTag(f.severity)}</span>`,

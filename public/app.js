@@ -92,23 +92,52 @@ $('start').addEventListener('click', async () => {
     authorization: { consent: $('consent').checked, confirmedBy: 'web-ui' },
   };
   try {
-    const res = await fetch('/api/scans', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to start scan');
+    const data = await postJSON('/api/scans', body);
     currentId = data.id;
     openResults(body.target);
     stream(currentId);
   } catch (e) {
-    $('formError').textContent = e.message;
-    $('formError').hidden = false;
+    showFormError(e.message);
   } finally {
     refreshStart();
   }
 });
+
+// Robust JSON POST: parses errors clearly and never surfaces a raw
+// "Unexpected token '<'" when the server returns an HTML page.
+async function postJSON(url, body) {
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch (netErr) {
+    throw new Error('Cannot reach the scan API. Is the backend server running? (' + netErr.message + ')');
+  }
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : {}; } catch {
+    // Non-JSON response — almost always an HTML error/proxy page.
+    if (/<!doctype|<html/i.test(text)) {
+      throw new Error(
+        'The scan API returned a web page instead of data (HTTP ' + res.status + '). ' +
+        'The backend (server.js) is not running or not reachable at /api. ' +
+        'If self-hosting, start the Node server and ensure your proxy forwards /api to it.'
+      );
+    }
+    throw new Error('Unexpected response from the API (HTTP ' + res.status + ').');
+  }
+  if (!res.ok) throw new Error(data.error || ('Request failed (HTTP ' + res.status + ').'));
+  return data;
+}
+
+function showFormError(msg) {
+  const el = $('formError');
+  el.textContent = msg;
+  el.hidden = false;
+}
 
 function openResults(target) {
   $('results').hidden = false;
@@ -246,6 +275,27 @@ function finish(id) {
   $('exportJson').onclick = () => window.open(`/api/scans/${id}/export.json`, '_blank');
 }
 
+// Verify the backend API is reachable; warn clearly if not (covers the
+// "Unexpected token '<'" scenario where only static files are served).
+async function checkBackend() {
+  try {
+    const res = await fetch('/api/health', { cache: 'no-store' });
+    const txt = await res.text();
+    JSON.parse(txt); // throws if HTML
+  } catch {
+    const main = document.querySelector('main') || document.body;
+    const banner = document.createElement('div');
+    banner.className = 'api-banner';
+    banner.innerHTML =
+      '⚠ <b>Backend API not reachable.</b> The scanner needs the Node server (<code>server.js</code>) running ' +
+      'and your web server must forward <code>/api</code> to it. Serving the static files alone will not work.';
+    main.prepend(banner);
+    $('start').disabled = true;
+    $('start').title = 'Backend API not reachable';
+  }
+}
+
+checkBackend();
 loadProfiles();
 loadModules();
 refreshStart();

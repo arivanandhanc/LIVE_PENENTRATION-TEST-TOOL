@@ -131,6 +131,21 @@ docker run -d -p 3000:3000 -v $PWD/data:/app/data --name pentesttool pentesttool
 The nginx config disables proxy buffering so Server-Sent Events (live scan
 progress) stream correctly.
 
+## Troubleshooting
+
+**"Unexpected token '<', "<!DOCTYPE"... is not valid JSON" when starting a scan.**
+This means the browser called `/api/scans` but got an HTML page instead of JSON —
+i.e. the **backend isn't reachable**. This tool is a Node application, not a static
+site: serving only the `public/` folder will not work. Check that:
+
+1. The Node server is actually running: `node server.js` (or via the systemd unit / Docker).
+2. `GET /api/health` returns `{"ok":true}` from the same origin as the page.
+3. If behind nginx/Caddy/Cloudflare, your proxy forwards **`/api`** (and the SSE
+   `/api/scans/:id/stream` endpoint, with buffering disabled) to the Node process.
+
+The app now detects this and shows a clear banner plus a readable error instead of
+the raw JSON-parse message.
+
 ## Roadmap
 
 - Server-side PDF rendering (Puppeteer) for one-click PDF export

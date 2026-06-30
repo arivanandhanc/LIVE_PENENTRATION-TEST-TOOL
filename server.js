@@ -169,7 +169,26 @@ app.get('/api/scans/:id/export.json', (req, res) => {
 });
 
 // --- Health check ---
-app.get('/api/health', (_req, res) => res.json({ ok: true, version: '0.1.0' }));
+app.get('/api/health', (_req, res) => res.json({ ok: true, version: '1.0.0' }));
+
+// --- Any unmatched /api/* route returns JSON (never an HTML page) so the
+//     frontend always gets parseable responses. ---
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ error: `No such API route: ${req.method} ${req.path}` });
+});
+
+// --- JSON error handler: malformed bodies and unexpected errors return JSON. ---
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, _next) => {
+  if (err && err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'Invalid JSON in request body.' });
+  }
+  console.error('Unhandled error:', err);
+  if (req.path.startsWith('/api/')) {
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+  res.status(500).send('Internal server error.');
+});
 
 app.listen(config.port, config.host, () => {
   console.log(`PenTestTool listening on http://${config.host}:${config.port}`);

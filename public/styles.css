@@ -82,7 +82,10 @@ button:disabled{ opacity:.5; cursor:not-allowed; }
 .primary.small{ width:auto; padding:8px 14px; font-size:13px; }
 .secondary{ background:#fff; color:var(--navy); border-color:var(--line); padding:8px 14px; font-size:13px; }
 .secondary:hover:not(:disabled){ border-color:var(--accent); color:var(--accent); }
-.error{ color:var(--crit); font-size:13px; margin-top:10px; }
+.error{ color:var(--crit); font-size:13px; margin-top:10px; line-height:1.5; }
+.api-banner{ grid-column:1 / -1; background:#fdeaea; border:1px solid #e0a39f; color:#a3221b;
+  padding:12px 16px; border-radius:10px; font-size:13.5px; margin-bottom:4px; }
+.api-banner code{ background:rgba(0,0,0,.06); }
 
 .results-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
 .results-head h2{ margin:0; }
